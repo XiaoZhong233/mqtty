@@ -89,7 +89,7 @@ public class BrokerServer {
         sb.group(bossGroup, workerGroup)
                 .channel(brokerProperties.isUseEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                 // handler在初始化时就会执行
-                .handler(new LoggingHandler(LogLevel.INFO))
+                .handler(new LoggingHandler(LogLevel.WARN))
                 // childHandler会在客户端成功connect后才执行
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
@@ -115,13 +115,14 @@ public class BrokerServer {
                     }
                 })
                 .option(ChannelOption.SO_BACKLOG, brokerProperties.getSoBacklog())
-                .option(ChannelOption.SO_RCVBUF, 5 * 1024 * 1024)  // 设置接收缓冲区大小为 10MB
-                .option(ChannelOption.SO_SNDBUF, 5 * 1024 * 1024)  // 设置发送缓冲区大小为 10MB
+                .option(ChannelOption.SO_RCVBUF, 10 * 1024 * 1024)  // 设置接收缓冲区大小为 10MB
+                .option(ChannelOption.SO_SNDBUF, 10 * 1024 * 1024)  // 设置发送缓冲区大小为 10MB
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(512 * 1024, 1024 * 1024))
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(4 * 1024 * 1024, 10 * 1024 * 1024))
+//                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(3*1024 * 1024, 5*1024 * 1024))
                 .childOption(ChannelOption.SO_KEEPALIVE, brokerProperties.isSoKeepAlive())
-                .childOption(ChannelOption.SO_RCVBUF, 5 * 1024 * 1024)
-                .childOption(ChannelOption.SO_SNDBUF, 5 * 1024 * 1024);
+                .childOption(ChannelOption.SO_RCVBUF, 10 * 1024 * 1024)
+                .childOption(ChannelOption.SO_SNDBUF, 10 * 1024 * 1024);
 //                .childOption(ChannelOption.TCP_NODELAY, true);
         if (Strings.isNotBlank(brokerProperties.getHost())) {
             channel = sb.bind(brokerProperties.getHost(), brokerProperties.getPort()).sync().channel();
@@ -135,7 +136,7 @@ public class BrokerServer {
         sb.group(bossGroup, workerGroup)
                 .channel(brokerProperties.isUseEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                 // handler在初始化时就会执行
-                .handler(new LoggingHandler(LogLevel.INFO))
+                .handler(new LoggingHandler(LogLevel.DEBUG))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
@@ -158,7 +159,7 @@ public class BrokerServer {
                         channelPipeline.addLast("broker", brokerHandler);
                     }
                 })
-                .option(ChannelOption.SO_BACKLOG, brokerProperties.getSoBacklog())
+                .option(ChannelOption.SO_BACKLOG, 1024)
                 .childOption(ChannelOption.SO_KEEPALIVE, brokerProperties.isSoKeepAlive());
         if (Strings.isNotBlank(brokerProperties.getHost())) {
             websocketChannel = sb.bind(brokerProperties.getHost(), brokerProperties.getWebsocketPort()).sync().channel();

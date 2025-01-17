@@ -26,8 +26,8 @@ public class BrokerProperties {
     private String producerTopic = "mqtt_publish"; // MQ转发topic
     private boolean mqttPasswordMust = true; // Connect消息必须通过用户名密码验证
 //    private boolean kafkaBrokerEnabled = false; // 是否启用Kafka消息转发
-    private int bossGroup_nThreads = 1; // bossGroup线程数
-    private int workerGroup_nThreads = 20; // workerGroup线程数
+    private int bossGroup_nThreads; // bossGroup线程数
+    private int workerGroup_nThreads; // workerGroup线程数
     private boolean amqp_enable;
     private String session_storage_type = "caffeine";
 }

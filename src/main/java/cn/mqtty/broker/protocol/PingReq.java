@@ -54,7 +54,7 @@ public class PingReq {
                 sessionStoreService.expire(clientId, sessionStore.getExpire());
                 MqttMessage pingRespMessage = MqttMessageFactory.newMessage(
                         new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_MOST_ONCE, false, 0), null, null);
-//                log.info("PINGREQ - clientId: {}", clientId);
+                log.info("PINGREQ - clientId: {}", clientId);
                 channel.writeAndFlush(pingRespMessage);
             }
         }

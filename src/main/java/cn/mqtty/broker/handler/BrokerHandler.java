@@ -158,22 +158,6 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-//        String clientId = (String) ctx.channel().attr(AttributeKey.valueOf("clientId")).get();
-//        SessionStore sessionStore = sessionStoreService.get(clientId);
-//        if (sessionStore != null && sessionStore.isCleanSession()) {
-//            subscribeStoreService.removeForClient(clientId);
-//            dupPublishMessageStoreService.removeByClient(clientId);
-//            dupPubRelMessageStoreService.removeByClient(clientId);
-//        }
-//        mqttLoggerService.info("DISCONNECT - clientId: {}, cleanSession: {}", clientId, sessionStore.isCleanSession());
-//        sessionStoreService.remove(clientId);
-//        mqttLoggerService.logInactive(clientId, ctx.channel().id().toString());
-//        this.channelGroup.remove(ctx.channel());
-//        this.channelIdMap.remove(brokerProperties.getId() + "_" + ctx.channel().id().asLongText());
-//        String sn = (String) ctx.channel().attr(AttributeKey.valueOf("sn")).get();
-//        if(StrUtil.isNotBlank(sn)){
-//            applicationContext.publishEvent(new DeviceActionEvt(clientId, sn, ctx.channel(), Action.OFFLINE));
-//        }
         log.info("channel[{}]断开", ctx.channel().id());
         closeProcess(ctx.channel());
         super.channelInactive(ctx);
@@ -252,7 +236,7 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
             log.error("IO异常：远程主机{}强迫关闭了一个现有的连接的异常\n sn:{}, clientId:{}.{}", ctx.channel().id(),
                     sn, clientId,cause.getMessage(),cause);
 //            protocolProcess.disConnect().processDisConnect(ctx.channel());
-            closeProcess(ctx.channel());
+//            closeProcess(ctx.channel());
             ctx.close();
         } else {
             log.error("异常:{}; sn:{}, clientId:{}",cause.getMessage(), sn, clientId, cause);

@@ -65,6 +65,6 @@ mqttwk:
     so-backlog: 511  # Socket参数, 存放已完成三次握手请求的队列最大长度, 默认511长度
     so-keep-alive: true  # 是否开启心跳保活机制, 默认开启
     bossGroup-nThreads: 1  # bossGroup线程数, 默认4
-    workerGroup-nThreads: 20  # workerGroup线程数, 默认20
+    workerGroup-nThreads: 16  # workerGroup线程数, 默认20
     amqp-enable: false #是否开启消息队列转发, 当前实现为rocketMQ
-    session-storage-type: redis # 存储类型: caffeine 或 redis，默认是 caffeine
+    session-storage-type: caffeine # 存储类型: caffeine 或 redis，默认是 caffeine
