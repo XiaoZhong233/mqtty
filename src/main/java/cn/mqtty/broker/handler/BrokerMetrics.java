@@ -41,7 +41,7 @@ public class BrokerMetrics {
             int currentConnections = connectionCount.get();
             double qps = totalMessages / 60.0;
             DecimalFormat df = new DecimalFormat("#.00");
-            metricLogger.info("[Metrics] Connections: {}, TotalMsg: {}, Avg QPS: {}\n",
+            metricLogger.info("[Metrics] Connections: {}, TotalMsg: {}, Avg QPS: {}",
                     currentConnections, totalMessages,  df.format(qps));
         }, 0, 1, TimeUnit.MINUTES);
     }
