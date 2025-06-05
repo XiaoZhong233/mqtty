@@ -66,6 +66,8 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     ApplicationContext applicationContext;
     @Autowired
     DeviceChannelService deviceChannelService;
+    @Autowired
+    BrokerMetrics brokerMetrics;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -73,6 +75,7 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
         log.info("channel[{}]连接", ctx.channel().id());
         this.channelGroup.add(ctx.channel());
         this.channelIdMap.put(brokerProperties.getId() + "_" + ctx.channel().id().asLongText(), ctx.channel().id());
+        brokerMetrics.incrementConnection();
     }
 
     //websocket断开后要下发停止超级终端指令
@@ -160,6 +163,7 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("channel[{}]断开", ctx.channel().id());
         closeProcess(ctx.channel());
+        brokerMetrics.decrementConnection();
         super.channelInactive(ctx);
     }
 
@@ -190,28 +194,37 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                 break;
             case PUBLISH:
                 protocolProcess.publish().processPublish(ctx.channel(), (MqttPublishMessage) msg);
+                brokerMetrics.incrementMessage();
                 break;
             case PUBACK:
                 protocolProcess.pubAck().processPubAck(ctx.channel(), (MqttMessageIdVariableHeader) msg.variableHeader());
+                brokerMetrics.incrementMessage();
                 break;
             case PUBREC:
                 protocolProcess.pubRec().processPubRec(ctx.channel(), (MqttMessageIdVariableHeader) msg.variableHeader());
+                brokerMetrics.incrementMessage();
                 break;
             case PUBREL:
                 protocolProcess.pubRel().processPubRel(ctx.channel(), (MqttMessageIdVariableHeader) msg.variableHeader());
+                brokerMetrics.incrementMessage();
                 break;
             case PUBCOMP:
                 protocolProcess.pubComp().processPubComp(ctx.channel(), (MqttMessageIdVariableHeader) msg.variableHeader());
+                brokerMetrics.incrementMessage();
                 break;
             case SUBSCRIBE:
                 protocolProcess.subscribe().processSubscribe(ctx.channel(), (MqttSubscribeMessage) msg);
+                brokerMetrics.incrementMessage();
                 break;
             case SUBACK:
+                brokerMetrics.incrementMessage();
                 break;
             case UNSUBSCRIBE:
                 protocolProcess.unSubscribe().processUnSubscribe(ctx.channel(), (MqttUnsubscribeMessage) msg);
+                brokerMetrics.incrementMessage();
                 break;
             case UNSUBACK:
+                brokerMetrics.incrementMessage();
                 break;
             case PINGREQ:
                 protocolProcess.pingReq().processPingReq(ctx.channel(), msg);
