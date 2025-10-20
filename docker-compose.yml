@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  mqtt-broker:
+    container_name: mqtt-broker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./log:/application/log
+    ports:
+      - "1883:1883"
+      - "9995:9995"
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
