@@ -83,7 +83,7 @@ public class DeviceServiceImpl implements DeviceService {
                 variableHeader,
                 payload
         );
-        //发送下线消息
+        //发送上线消息
         this.protocolProcess.publish().processPublish(channel, publishMessage);
     }
 
