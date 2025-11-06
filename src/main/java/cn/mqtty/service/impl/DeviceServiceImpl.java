@@ -3,6 +3,7 @@ package cn.mqtty.service.impl;
 import cn.mqtty.amqp.InternalMessage;
 import cn.mqtty.amqp.RelayService;
 import cn.mqtty.broker.config.BrokerProperties;
+import cn.mqtty.broker.msg.ActionMsg;
 import cn.mqtty.broker.protocol.ProtocolProcess;
 import cn.mqtty.service.DeviceService;
 import cn.mqtty.service.evt.DeviceActionEvt;
@@ -37,6 +38,10 @@ public class DeviceServiceImpl implements DeviceService {
     RelayService relayService;
     @Autowired
     BrokerProperties brokerProperties;
+    @Autowired
+    BindSNService bindSNService;
+    @Autowired
+    MessageDeliveryService messageDeliveryService;
 
     @EventListener
     public void handleActionEvt(DeviceActionEvt deviceActionEvt){
@@ -45,6 +50,19 @@ public class DeviceServiceImpl implements DeviceService {
         switch (deviceActionEvt.getAction()){
             case ONLINE -> this.online(deviceActionEvt.getChannel(), deviceActionEvt.getSn(), deviceActionEvt.getClientId());
             case OFFLINE -> this.offline(deviceActionEvt.getChannel(), deviceActionEvt.getSn(), deviceActionEvt.getClientId());
+            case PUSH_MSG -> this.messagePush(deviceActionEvt.getChannel(), deviceActionEvt.getSn(), deviceActionEvt.getActionMsg());
+        }
+    }
+
+    @Override
+    public boolean isOnline(String sn) {
+        return bindSNService.isOnline(sn);
+    }
+
+    @Override
+    public void messagePush(Channel channel, String sn, ActionMsg msg) {
+        if(!isOnline(sn)){
+            messageDeliveryService.cacheMessage(sn, msg);
         }
     }
 
@@ -84,6 +102,8 @@ public class DeviceServiceImpl implements DeviceService {
                 payload
         );
         //发送上线消息
+        bindSNService.bind(sn, channel);
+        messageDeliveryService.onDeviceOnline(sn);
         this.protocolProcess.publish().processPublish(channel, publishMessage);
     }
 
@@ -112,6 +132,7 @@ public class DeviceServiceImpl implements DeviceService {
                 payload
         );
         //发送下线消息
+        bindSNService.unbind(sn);
         this.protocolProcess.publish().processPublish(channel, publishMessage);
     }
 }

@@ -155,7 +155,7 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
         this.channelGroup.remove(channel);
         this.channelIdMap.remove(brokerProperties.getId() + "_" + channel.id().asLongText());
         if(StrUtil.isNotBlank(sn)){
-            applicationContext.publishEvent(new DeviceActionEvt(clientId, sn, channel, Action.OFFLINE));
+            applicationContext.publishEvent(new DeviceActionEvt(clientId, sn, channel, Action.OFFLINE, null));
         }
     }
 

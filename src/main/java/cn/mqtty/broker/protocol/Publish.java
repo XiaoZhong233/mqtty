@@ -129,17 +129,28 @@ public class Publish {
                     ActionMsg actionMsg = mapper.readValue(messageBytes, ActionMsg.class);
                     if(StrUtil.isNotBlank(actionMsg.getSn())){
                         if(actionMsg.getMsg().get("action").asInt()==1){
-                            applicationContext.publishEvent(new DeviceActionEvt(clientId, actionMsg.getSn(), channel, Action.ONLINE));
+                            applicationContext.publishEvent(new DeviceActionEvt(clientId, actionMsg.getSn(), channel, Action.ONLINE, actionMsg));
                             channel.attr(AttributeKey.valueOf("sn")).set(actionMsg.getSn());
                         } else if (actionMsg.getMsg().get("action").asInt()==0) {
-                            applicationContext.publishEvent(new DeviceActionEvt(clientId, actionMsg.getSn(), channel, Action.OFFLINE));
+                            applicationContext.publishEvent(new DeviceActionEvt(clientId, actionMsg.getSn(), channel, Action.OFFLINE, actionMsg));
                         }
                     }
                 }catch (Exception e){
                     log.error("设备登录报文解析错误! clientId:{}, 错误原因: {}, ", clientId, e.getMessage(), e);
                 }
-
             }
+
+            if(topicName.startsWith("$msg/push")){
+                try {
+                    ActionMsg actionMsg = mapper.readValue(messageBytes, ActionMsg.class);
+                    if(StrUtil.isNotBlank(actionMsg.getSn())){
+                        applicationContext.publishEvent(new DeviceActionEvt(clientId, actionMsg.getSn(), channel, Action.PUSH_MSG, actionMsg));
+                    }
+                }catch (Exception e){
+                    log.error("设备个推报文解析错误! clientId:{}, 错误原因: {}, ", clientId, e.getMessage(), e);
+                }
+            }
+
 //            internalCommunication.internalSend(internalMessage);
             this.sendPublishMessage(msg.variableHeader().topicName(), msg.fixedHeader().qosLevel(), messageBytes, false, false);
             this.sendPubAckMessage(channel, msg.variableHeader().packetId());

@@ -107,32 +107,6 @@
     </filter>
   </appender>
 
-<!--  &lt;!&ndash; 时间滚动输出 level 为 DEBUG 的 MQTT 通讯日志 &ndash;&gt;-->
-<!--  <appender name="MQTT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
-<!--    &lt;!&ndash; 正在记录的日志文件的路径及文件名 &ndash;&gt;-->
-<!--    <file>${log.path}/mqtt.log</file>-->
-<!--    &lt;!&ndash;日志文件输出格式&ndash;&gt;-->
-<!--    <encoder>-->
-<!--      <pattern>${FILE_LOG_PATTERN}</pattern>-->
-<!--      <charset>UTF-8</charset> &lt;!&ndash; 设置字符集 &ndash;&gt;-->
-<!--    </encoder>-->
-<!--    &lt;!&ndash; 日志记录器的滚动策略，按日期，按大小记录 &ndash;&gt;-->
-<!--    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
-<!--      <fileNamePattern>${log.path}/mqtt/mqtt-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>-->
-<!--      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">-->
-<!--        <maxFileSize>150MB</maxFileSize>-->
-<!--      </timeBasedFileNamingAndTriggeringPolicy>-->
-<!--      &lt;!&ndash;日志文件保留天数&ndash;&gt;-->
-<!--      <maxHistory>7</maxHistory>-->
-<!--    </rollingPolicy>-->
-<!--    &lt;!&ndash; 此日志文件记录 DEBUG 级别及以上的日志 &ndash;&gt;-->
-<!--    <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
-<!--      <level>debug</level>-->
-<!--      <onMatch>ACCEPT</onMatch>-->
-<!--      <onMismatch>DENY</onMismatch>-->
-<!--    </filter>-->
-<!--  </appender>-->
-
   <appender name="MQTT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- 正在记录的日志文件的路径及文件名 -->
     <file>${log.path}/mqtt.log</file>
@@ -170,6 +144,28 @@
       <maxHistory>7</maxHistory>
     </rollingPolicy>
   </appender>
+
+  <!-- 时间滚动输出 level为 INFO 日志，用于记录离线消息重发 -->
+  <appender name="RESEND_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${log.path}/resend.log</file>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${log.path}/resend/resend-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy
+              class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+  </appender>
+
+  <!-- 专门记录离线消息重发的 Logger -->
+  <logger name="resendLogger" level="info" additivity="false">
+    <appender-ref ref="RESEND_FILE"/>
+  </logger>
 
 
   <!-- 专门记录 MQTT 通讯的 Logger -->
