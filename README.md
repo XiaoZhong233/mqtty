@@ -1,6 +1,6 @@
 ## MQTTY 
 ### 简述
-是一个开源MQTT BROKER中间件，采用Netty开发，遵守MQTT3.1.1规范实现。
+MQTT BROKER中间件，Netty开发，遵守MQTT3.1.1规范实现。
 
 ### 技术选型
 - Springboot 3
