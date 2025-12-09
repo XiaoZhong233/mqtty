@@ -7,6 +7,8 @@ package cn.mqtty.common.session;
 
 import cn.mqtty.broker.msg.WillData;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 

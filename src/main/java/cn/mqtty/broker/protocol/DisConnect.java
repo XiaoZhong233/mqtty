@@ -20,11 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import static cn.mqtty.broker.constants.ChannelAttrs.DISCONNECT_FLAG;
 
 
 /**
@@ -60,14 +57,14 @@ public class DisConnect {
     public void processDisConnect(Channel channel) {
         String clientId = (String) channel.attr(AttributeKey.valueOf("clientId")).get();
         SessionStore sessionStore = sessionStoreService.get(clientId);
-        //todo: 这里还需要加入关闭mqtt-ws的一些特殊处理
-        if (sessionStore != null && sessionStore.isCleanSession()) {
-            subscribeStoreService.removeForClient(clientId);
-            dupPublishMessageStoreService.removeByClient(clientId);
-            dupPubRelMessageStoreService.removeByClient(clientId);
-        }
+        channel.attr(DISCONNECT_FLAG).set(Boolean.TRUE);
+//        if (sessionStore != null && sessionStore.isCleanSession()) {
+//            subscribeStoreService.removeForClient(clientId);
+//            dupPublishMessageStoreService.removeByClient(clientId);
+//            dupPubRelMessageStoreService.removeByClient(clientId);
+//        }
         loggerService.info("DISCONNECT - clientId: {}, cleanSession: {}", clientId, sessionStore.isCleanSession());
-        sessionStoreService.remove(clientId);
+//        sessionStoreService.remove(clientId);
         channel.close();
     }
 

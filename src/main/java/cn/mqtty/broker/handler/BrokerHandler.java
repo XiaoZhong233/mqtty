@@ -7,6 +7,7 @@ package cn.mqtty.broker.handler;
 
 import cn.hutool.core.util.StrUtil;
 import cn.mqtty.broker.config.BrokerProperties;
+import cn.mqtty.broker.constants.ChannelAttrs;
 import cn.mqtty.broker.msg.WillData;
 import cn.mqtty.broker.protocol.ProtocolProcess;
 import cn.mqtty.common.session.SessionStore;
@@ -140,7 +141,6 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     private void closeProcess(Channel channel){
         String clientId = (String)channel.attr(AttributeKey.valueOf("clientId")).get();
         String sn = (String) channel.attr(AttributeKey.valueOf("sn")).get();
-        log.info("设备{}执行断开的一些处理", sn);
         //ws关闭的处理
         closeWsProcess(channel);
         SessionStore sessionStore = sessionStoreService.get(clientId);
@@ -148,14 +148,15 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
             subscribeStoreService.removeForClient(clientId);
             dupPublishMessageStoreService.removeByClient(clientId);
             dupPubRelMessageStoreService.removeByClient(clientId);
-            log.info("设备{}删除订阅缓存、发布缓存");
+            if(StrUtil.isNotBlank(sn)){
+                log.info("设备{}删除订阅缓存、发布缓存", sn);
+            }
         }
-        if(sessionStore!=null && sessionStore.getWillMessage()!=null){
+        Boolean DISCONNECT_FLAG = channel.attr(ChannelAttrs.DISCONNECT_FLAG).get();
+        if(sessionStore!=null && sessionStore.getWillMessage()!=null && DISCONNECT_FLAG==null){
             log.info("[{}]发送遗嘱消息: Topic:[{}]", clientId, sessionStore.getWillMessage().getTopic());
             publishWill(channel, sessionStore.getWillMessage());
         }
-//        mqttLoggerService.info("断开 - clientId: {}, sn:{}, cleanSession: {}", clientId, sn,
-//                sessionStore!=null?sessionStore.isCleanSession():"null");
         sessionStoreService.remove(clientId);
         mqttLoggerService.logInactive(clientId, channel.id().toString());
         this.channelGroup.remove(channel);
