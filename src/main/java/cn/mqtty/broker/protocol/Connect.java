@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.mqtty.broker.config.BrokerProperties;
 import cn.mqtty.broker.handler.enums.ProtocolType;
 import cn.mqtty.broker.handler.enums.SslStatus;
+import cn.mqtty.broker.msg.WillData;
 import cn.mqtty.common.auth.IAuthService;
 import cn.mqtty.common.message.DupPubRelMessageStore;
 import cn.mqtty.common.message.DupPublishMessageStore;
@@ -166,10 +167,15 @@ public class Connect {
         // 处理遗嘱信息
         SessionStore sessionStore = new SessionStore(brokerProperties.getId(), msg.payload().clientIdentifier(), channel.id().asLongText(), msg.variableHeader().isCleanSession(), null, expire);
         if (msg.variableHeader().isWillFlag()) {
-            MqttPublishMessage willMessage = (MqttPublishMessage) MqttMessageFactory.newMessage(
-                    new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.valueOf(msg.variableHeader().willQos()), msg.variableHeader().isWillRetain(), 0),
-                    new MqttPublishVariableHeader(msg.payload().willTopic(), 0), Unpooled.buffer().writeBytes(msg.payload().willMessageInBytes()));
-            sessionStore.setWillMessage(willMessage);
+            String topic = msg.payload().willTopic();
+            byte[] payloadBytes = msg.payload().willMessageInBytes(); // 已安全复制payload
+            int qos = msg.variableHeader().willQos();
+            boolean retain = msg.variableHeader().isWillRetain();
+
+            WillData willData = new WillData(topic, payloadBytes, qos, retain);
+            sessionStore.setWillMessage(willData);
+            log.info("连接{}设置遗嘱消息 [Topic]:[{}], [QoS]:[{}], [Retain]: [{}]", msg.payload().clientIdentifier(),
+                    msg.payload().willTopic(), msg.variableHeader().willQos(), msg.variableHeader().isWillRetain());
         }
         // 至此存储会话信息及返回接受客户端连接
         sessionStoreService.put(msg.payload().clientIdentifier(), sessionStore, expire);

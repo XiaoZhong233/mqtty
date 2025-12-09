@@ -7,6 +7,7 @@ package cn.mqtty.broker.handler;
 
 import cn.hutool.core.util.StrUtil;
 import cn.mqtty.broker.config.BrokerProperties;
+import cn.mqtty.broker.msg.WillData;
 import cn.mqtty.broker.protocol.ProtocolProcess;
 import cn.mqtty.common.session.SessionStore;
 import cn.mqtty.common.subscribe.SubscribeStore;
@@ -19,6 +20,7 @@ import cn.mqtty.store.message.DupPubRelMessageStoreService;
 import cn.mqtty.store.message.DupPublishMessageStoreService;
 import cn.mqtty.store.session.SessionStoreService;
 import cn.mqtty.store.subscribe.SubscribeStoreService;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.mqtt.*;
@@ -148,6 +150,10 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
             dupPubRelMessageStoreService.removeByClient(clientId);
             log.info("设备{}删除订阅缓存、发布缓存");
         }
+        if(sessionStore!=null && sessionStore.getWillMessage()!=null){
+            log.info("[{}]发送遗嘱消息: Topic:[{}]", clientId, sessionStore.getWillMessage().getTopic());
+            publishWill(channel, sessionStore.getWillMessage());
+        }
 //        mqttLoggerService.info("断开 - clientId: {}, sn:{}, cleanSession: {}", clientId, sn,
 //                sessionStore!=null?sessionStore.isCleanSession():"null");
         sessionStoreService.remove(clientId);
@@ -157,6 +163,22 @@ public class BrokerHandler extends SimpleChannelInboundHandler<MqttMessage> {
         if(StrUtil.isNotBlank(sn)){
             applicationContext.publishEvent(new DeviceActionEvt(clientId, sn, channel, Action.OFFLINE));
         }
+    }
+
+    private void publishWill(Channel channel, WillData will) {
+
+        MqttPublishMessage publishMessage = (MqttPublishMessage) MqttMessageFactory.newMessage(
+                new MqttFixedHeader(
+                        MqttMessageType.PUBLISH,
+                        false,
+                        MqttQoS.valueOf(will.getQos()),
+                        will.isRetain(),
+                        0),
+                new MqttPublishVariableHeader(will.getTopic(), 0),
+                Unpooled.wrappedBuffer(will.getPayload())
+        );
+
+        protocolProcess.publish().processPublish(channel, publishMessage);
     }
 
     @Override

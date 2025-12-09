@@ -29,16 +29,6 @@ public class IdleReadStateHandler extends ChannelInboundHandlerAdapter {
             if(event.state() == IdleState.ALL_IDLE){
                 Channel channel = ctx.channel();
                 String clientId = (String) channel.attr(AttributeKey.valueOf("clientId")).get();
-                // 发送遗嘱消息
-                if (this.protocolProcess.getSessionStoreService().containsKey(clientId)) {
-                    SessionStore sessionStore = this.protocolProcess.getSessionStoreService().get(clientId);
-                    if (sessionStore.getWillMessage() != null) {
-                        log.info("客户端{}发送遗嘱消息", clientId);
-                        this.protocolProcess.publish().processPublish(ctx.channel(), sessionStore.getWillMessage());
-                    }
-                }
-                //断开连接
-                String channelId = channel.id().asShortText();
                 log.info("客户端{}触发空闲事件...即将关闭", clientId);
                 channel.close();
             }

@@ -5,6 +5,7 @@
 package cn.mqtty.common.session;
 
 
+import cn.mqtty.broker.msg.WillData;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 
 import java.io.Serializable;
@@ -25,13 +26,13 @@ public class SessionStore implements Serializable {
 
     private boolean cleanSession;
 
-    private MqttPublishMessage willMessage;
+    private WillData willMessage;
 
     public SessionStore() {
 
     }
 
-    public SessionStore(String brokerId, String clientId, String channelId, boolean cleanSession, MqttPublishMessage willMessage, int expire) {
+    public SessionStore(String brokerId, String clientId, String channelId, boolean cleanSession, WillData willMessage, int expire) {
         this.brokerId = brokerId;
         this.clientId = clientId;
         this.channelId = channelId;
@@ -82,11 +83,11 @@ public class SessionStore implements Serializable {
         return this;
     }
 
-    public MqttPublishMessage getWillMessage() {
+    public WillData getWillMessage() {
         return willMessage;
     }
 
-    public SessionStore setWillMessage(MqttPublishMessage willMessage) {
+    public SessionStore setWillMessage(WillData willMessage) {
         this.willMessage = willMessage;
         return this;
     }

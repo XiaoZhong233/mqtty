@@ -1,5 +1,6 @@
 package cn.mqtty.store.util;
 
+import cn.mqtty.broker.msg.WillData;
 import cn.mqtty.common.session.SessionStore;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -25,16 +26,12 @@ public class StoreUtil {
             sessionStore.put("cleanSession", store.isCleanSession());
             sessionStore.put("brokerId", store.getBrokerId());
             sessionStore.put("expire", store.getExpire());
-            MqttPublishMessage msg = store.getWillMessage();
+            WillData msg = store.getWillMessage();
             if (null != msg) {
-                sessionStore.addv("payload", Base64.getEncoder().encodeToString(msg.payload().array()));
-                sessionStore.addv("messageType", msg.fixedHeader().messageType().value());
-                sessionStore.addv("isDup", msg.fixedHeader().isDup());
-                sessionStore.addv("qosLevel", msg.fixedHeader().qosLevel().value());
-                sessionStore.addv("isRetain", msg.fixedHeader().isRetain());
-                sessionStore.addv("remainingLength", msg.fixedHeader().remainingLength());
-                sessionStore.addv("topicName", msg.variableHeader().topicName());
-                sessionStore.addv("packetId", msg.variableHeader().packetId());
+                sessionStore.addv("payload", Base64.getEncoder().encodeToString(msg.getPayload()));
+                sessionStore.addv("qosLevel", msg.getQos());
+                sessionStore.addv("isRetain", msg.isRetain());
+                sessionStore.addv("topicName", msg.getTopic());
                 sessionStore.addv("hasWillMessage", true);
             }
 
@@ -49,26 +46,13 @@ public class StoreUtil {
     public static SessionStore mapTransToPublishMsgBeta(NutMap store) {
         SessionStore sessionStore = new SessionStore();
         if (store.getBoolean("hasWillMessage", false)) {
-            byte[] payloads = Base64.getDecoder().decode(store.getString("payload"));
-            ByteBuf buf = null;
-            try {
-                buf = Unpooled.wrappedBuffer(payloads);
-                MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(
-                        MqttMessageType.valueOf(store.getInt("messageType")),
-                        store.getBoolean("isDup"),
-                        MqttQoS.valueOf(store.getInt("qosLevel")),
-                        store.getBoolean("isRetain"),
-                        store.getInt("remainingLength"));
-
-                MqttPublishVariableHeader mqttPublishVariableHeader = new MqttPublishVariableHeader(store.getString("topicName"),
-                        store.getInt("packetId"));
-                MqttPublishMessage mqttPublishMessage = new MqttPublishMessage(mqttFixedHeader, mqttPublishVariableHeader, buf);
-                sessionStore.setWillMessage(mqttPublishMessage);
-            } finally {
-                if (buf != null) {
-                    buf.release();
-                }
-            }
+            WillData willData = new WillData(
+                    store.getString("topicName"),
+                    Base64.getDecoder().decode(store.getString("payload")),
+                    store.getInt("qosLevel"),
+                    store.getBoolean("isRetain")
+            );
+            sessionStore.setWillMessage(willData);
         }
         sessionStore.setChannelId(store.getString("channelId"));
         sessionStore.setClientId(store.getString("clientId"));
